@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+	
+	<!-- 配置自动扫描的包 -->
+	<!-- Controller注解的的作用是声明控制器（处理器）类,从数据流转的角度，这个类应该是由SpringMVC框架进行管理和组织的，所以不需要由Spring框架扫描 -->
+	<context:component-scan base-package="com.zht.*">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	
+	<!-- 配置SqlSessionFactoryBean -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean" >
+		<!-- 配置MyBatis的全局配置文件 -->
+        <property name="configLocation" value="classpath:mybatis/config.xml" />
+        <!-- 配置数据源 -->
+        <property name="dataSource" ref="dataSource" />
+        <!-- 配置要扫描的Mapper接口的映射文件 -->
+        <property name="mapperLocations" >
+            <list>
+                <value>classpath*:mybatis/mapper-*.xml</value>
+            </list>
+        </property>
+    </bean>
+	
+	<!-- 扫描Mapper接口 -->
+<!-- 	<mybatis-spring:scan base-package="com.atguigu.ssm.mapper"/> -->
+    <bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer" >
+        <property name="basePackage" value="com.zht.atcrowdfunding.**.dao" />
+    </bean>	
+	
+	<!-- 配置数据源 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" >
+        <property name="driverClass" value="com.mysql.jdbc.Driver"/>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3386/atcrowdfunding?rewriteBatchedStatements=true&amp;useUnicode=true&amp;characterEncoding=utf8"/>
+        <property name="user" value="root"/>
+        <property name="password" value="123456"/>
+    </bean>
+	
+    <!-- 配置事务管理器 -->
+<!--     <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"> -->
+<!--          配置数据源属性 -->
+<!--          <property name="dataSource" ref="dataSource"></property> -->
+<!--     </bean> -->
+<!--     开启事务注解支持 -->
+<!--     <tx:annotation-driven/> -->
+    
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager" >
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!-- 事务功能增强器 -->
+    <tx:advice id="transactionAdvice" transaction-manager="transactionManager" >
+        <tx:attributes>
+        	<!-- 事务的传播行为的前提是事务的嵌套 -->
+            <tx:method name="*" propagation="REQUIRED" isolation="DEFAULT" rollback-for="java.lang.Exception" />
+            <!-- 从view中查询数据，只读事务的作用是让数据库以更加高效的方式把数据返回 -->
+            <tx:method name="query*" read-only="true" /><!-- 如果方法名以query开头，要增加只读事务 -->
+        </tx:attributes>
+    </tx:advice>  
+    <!-- 切入点表达式：访问权限、返回值任意；com.zht包及其子包；类名或接口名以Service结尾；方法名任意；参数列表任意 -->  
+    <aop:config>
+        <aop:advisor advice-ref="transactionAdvice" pointcut="execution(* com.zht..*Service.*(..))"/>
+    </aop:config>
+	
+	
+	
+	
+	
+	
+	
+	
+</beans>

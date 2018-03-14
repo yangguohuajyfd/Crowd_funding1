@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zht.atcrowdfunding.dao.UserDao" >
+
+	<select id="queryPermissionsByUser" resultType="com.zht.atcrowdfunding.beans.Permission">
+		select * from t_permission
+		where id in(
+			select permissionid from t_role_permission
+			where roleid in(
+				select roleid from t_user_role
+				where userid = #{id}
+			)
+		)
+	</select>
+
+	<!-- 查询分页员工信息 -->
+	<select id="queryPageUsers" resultType="com.zht.atcrowdfunding.beans.User">
+		select * from t_user
+		<where>
+			<if test="queryContent != null">
+				and loginacct like concat('%', #{queryContent}, '%')
+			</if>
+		</where>
+		order by createtime desc
+		limit #{start}, #{pagesize}
+	</select>
+	
+	<!-- 查询总记录数 -->
+	<select id="queryUserCount" resultType="int">
+		select count(*) from t_user
+		<where>
+			<if test="queryContent != null">
+				and loginacct like concat('%', #{queryContent}, '%')
+			</if>
+		</where>
+	</select>
+	
+	<!-- 插入员工 -->
+	<insert id="insertUser">
+		insert into t_user(
+			loginacct, userpswd, username, email, createtime
+		) values(
+			#{loginacct}, #{userpswd}, #{username}, #{email}, #{createtime}
+		)
+	</insert>
+	
+	<!-- 批量插入员工 -->
+	<insert id="batchInsertUsers">
+		insert into t_user(loginacct, userpswd, username, email,createtime) values
+		<foreach collection="users" item="user" index="index" separator=",">
+		(#{user.loginacct}, #{user.userpswd}, #{user.username}, #{user.email}, #{user.createtime})
+		</foreach>
+	</insert>
+	
+	<!-- 插入用户角色信息 -->
+	<insert id="insertUserRoles">
+		insert into t_user_role(userid, roleid) values
+		<foreach collection="roleids" item="roleid" separator=",">
+			(#{userid}, #{roleid})
+		</foreach>
+	</insert>
+	
+	<update id="updateUser">
+		update t_user
+		set loginacct = #{loginacct}, username = #{username}, email = #{email}
+		where id = #{id}
+	</update>
+	
+	<delete id="deleteUserById">
+		delete from t_user where id = #{id}
+	</delete>
+	
+	<delete id="deleteUsers">
+		delete from t_user where id in
+		<foreach collection="users" item="user" open="(" separator="," close=")">
+			#{user.id}
+		</foreach>
+	</delete>
+	
+	<!-- 删除用户角色信息 -->
+	<delete id="deleteUserRoles">
+		delete from t_user_role where userid = #{userid} and roleid in
+		<foreach collection="roleids" item="roleid" open="(" separator="," close=")">
+			#{roleid}
+		</foreach>
+	</delete>
+
+</mapper>

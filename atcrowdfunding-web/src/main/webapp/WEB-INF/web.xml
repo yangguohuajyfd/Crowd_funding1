@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+
+<!-- 在web.xml文件中增加配置信息集成Spring框架,Spring环境构建时需要读取web应用的
+	初始化参数contextConfigLocation,从classpath中读取配置文件spring/spring-*.xml -->
+	<!-- 配置spring监听器,配置ContextLoaderListener监听器 -->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath*:spring/spring-*.xml</param-value>
+    </context-param>
+    
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+    <!-- 自定义监听器要放到spring监听器之后，因为有可能会用到spring的东西 -->
+    <listener>
+    	<listener-class>com.zht.web.listener.ServerStartupListener</listener-class>
+    </listener>
+    
+    <!-- 设置字符集 -->
+    <filter>
+    	<filter-name>CharacterEncodingFilter</filter-name>
+    	<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    	<init-param>
+    		<param-name>encoding</param-name>
+    		<param-value>UTF-8</param-value>
+    	</init-param>
+    	<init-param>
+    		<param-name>forceEncoding</param-name>
+    		<param-value>true</param-value>
+    	</init-param>
+    </filter>
+    <filter-mapping>
+    	<filter-name>CharacterEncodingFilter</filter-name>
+    	<servlet-name>springmvc</servlet-name>
+    </filter-mapping>
+
+<!-- 集成SpringMVC框架，SpringMVC环境构建时需要读取servlet初始化参数init-param -->  
+	<!-- 配置SpringMVC调度器处理器 -->  
+     <servlet>
+        <servlet-name>springmvc</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>classpath:spring/springmvc-context.xml</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>springmvc</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>   
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</web-app>
